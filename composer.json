@@ -1,0 +1,14 @@
+{
+    "name": "wnull/warface-search-tags",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "WFTags\\": "src/"
+        }
+    }
+}
