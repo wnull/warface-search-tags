@@ -2,23 +2,24 @@
 
 namespace WFTags;
 
-use WFTags\{Enum\Types, Exceptions\InvalidSearchTagsExceptions};
+use WFTags\Exceptions\InvalidSearchTagsExceptions;
+use WFTags\Enums\{Messages\Clan, Messages\User, Status, Types};
 
 class SearchTags
 {
-    private WarfaceAPI $api;
+    private API $api;
 
-    public static array $user = [
-        'Персонаж неактивен'          => 101,
-        'Пользователь не найден'      => 102,
-        'Игрок скрыл свою статистику' => 103,
+    private array $user = [
+        User::INACTIVE_USER  => Status::INACTIVE,
+        User::USER_NOT_FOUND => Status::NOT_FOUND,
+        User::HIDDEN_USER    => Status::HIDDEN,
     ];
 
-    public static array $clan = [
-        'Клан не найден' => 102
+    private array $clan = [
+        Clan::CLAN_NOT_FOUND => Status::NOT_FOUND
     ];
 
-    private string $type;
+    private array $data, $params;
 
     /**
      * SearchTags constructor.
@@ -26,8 +27,18 @@ class SearchTags
      */
     public function __construct(string $type = Types::USER)
     {
-        $this->api = new WarfaceAPI($type);
-        $this->type = $type;
+        $this->api = new API($type);
+        $this->data = $this->{$type};
+
+        switch ($type) {
+            case Types::USER:
+                $this->params = ['key' => 'name', 'msg' => User::EXIST_USER];
+                break;
+
+            case Types::CLAN:
+                $this->params = ['key' => 'clan', 'msg' => Clan::EXIST_CLAN];
+                break;
+        }
     }
 
     /**
@@ -45,37 +56,43 @@ class SearchTags
 
     /**
      * @param string $tag
-     * @return int
+     * @return array
      */
-    public function get(string $tag): ?int
+    public function get(string $tag): array
     {
         $code = -1;
+        $message = '';
 
         for ($server = 1; $server <= 3; $server++)
         {
             try {
-                $key = $this->type === Types::USER ? 'name' : 'clan';
-                $this->force([$key => $tag, 'server' => $server]);
+                $this->force([$this->params['key'] => $tag, 'server' => $server]);
             }
             catch (InvalidSearchTagsExceptions $e)
             {
                 $code = $e->getCode();
+                $message = $e->getMessage();
 
-                if ($e->getCode() !== 102) {
+                if ($code !== Status::NOT_FOUND) {
+                    $message = $this->params['msg'];
                     break;
                 }
             }
         }
 
-        return $code;
+        return [
+            'tag'  => $tag,
+            'code' => $code,
+            'msg'  => $message
+        ];
     }
 
     /**
      * @param string $el
      * @return int
      */
-    private function getFailCodeByMessage(string $el): ?int
+    private function getFailCodeByMessage(string $el): int
     {
-        return self::${$this->type}[$el] ?? 100;
+        return $this->data[$el] ?? Status::EXISTS;
     }
 }

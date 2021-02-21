@@ -2,9 +2,9 @@
 
 namespace WFTags;
 
-use WFTags\{Enum\Types, Exceptions\InvalidSearchTagsExceptions};
+use WFTags\{Enums\Types, Exceptions\InvalidSearchTagsExceptions};
 
-class WarfaceAPI
+class API
 {
     private const HOST_API = 'http://api.warface.ru/';
 

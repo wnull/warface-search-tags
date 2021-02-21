@@ -1,6 +1,6 @@
 <?php
 
-namespace WFTags\Enum;
+namespace WFTags\Enums;
 
 class Types
 {
